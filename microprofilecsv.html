@@ -52,7 +52,7 @@ Include .mp4 file to show video<br>
 Drop multiple sets of .csv/.mp4 files to compare averages/min/max<br>
 <br>
 h: Show help<br>
-1-5: Toggle no. of graphs<br>
+1-8: Toggle no. of graphs<br>
 Mousewheel/Ctrl + mouse up/down: Zoom<br>
 Left Mouse + mouse left/right: Pan<br>
 Right Mouse + mouse left/right: Show Range info
@@ -60,19 +60,6 @@ Space: Toggle Set display<br>
 </div>
 <div class="filterinputsearchdiv" id="FilterInputDiv">Filter<br><input type="text" id="FilterInput" class="filterinputsearch"></div>
 <div class="helpstart" id="helpwindow" style="left:20px;top:20px">
-History View:<br>
-Right Click + Drag : Select Region<br>
-Click + Drag: Move Selection<br>
-Click Frame : Center on frame<br>
-<hr>
-Main View:<br>
-space: Freeze capturing<br>
-x : Toggle View<br>
-/ : Rotate connection port % 3<br>
-Ctrl + Drag: Pan<br>
-Click + Drag: Pan<br>
-Enter: Capture selection/Next N Frames
-<hr>
 <table style="width:100%">
 <tr>
 <td width="50%" align="left"><a href='javascript:void(0)' onclick="ShowHelp(0);">Close</a></td>
@@ -304,7 +291,6 @@ var VIEW_SIZE = 8;
 var GRAPH_ALPHA = 0.5;
 
 
-// Settings.FancyGraph = 1;
 Settings.AutomaticReference = 1;
 Cookie.CodeReportMode = 0; // 0: prompt, 1:always send, 2: never send, never prompt
 
@@ -1246,123 +1232,6 @@ function DrawRange(context, X, XEnd, Y, YEnd, ColorBack, ColorFront)
 	}
 }
 
-
-// function DrawHistory(View, LocalMouseX, LocalMouseY)
-// {
-// 	ProfileEnter("DrawHistory");
-// 	var Canvas = View.Canvas[View.BackBuffer];
-// 	var context = Canvas.getContext('2d');
-// 	context.clearRect(0, 0, View.w, View.h);
-// 	if(!FrameData.Time)
-// 		return;
-// 	var fHeight = View.h;
-// 	var fWidth = nWidth / FRAME_COUNT;
-// 	var fHeightScale = fHeight / ReferenceHistory;
-// 	var fX = 0;
-// 	var FrameIndex = -1;
-// 	var MouseDragging = 0;
-// 	var GreenTime = (Settings.TargetTime * 0.9);
-// 	var RedBegin = (Settings.TargetTime * 1.1);
-// 	var LerpDist = 1.0 / (RedBegin - GreenTime);
-// 	var id0 = -1;
-// 	var id1 = -1;
-
-// 	if(MouseDragActiveXEnd > MouseDragActiveXStart)
-// 	{
-// 		var idx0 = Math.ceil(FRAME_COUNT * MouseDragActiveXStart / nWidth);
-// 		var idx1 = Math.floor(FRAME_COUNT * MouseDragActiveXEnd / nWidth);
-// 		idx0 = Clamp(idx0, 0, FRAME_COUNT-1);
-// 		idx1 = Clamp(idx1, 0, FRAME_COUNT-1);
-// 		id0 = FrameData.Ids[idx0];
-// 		id1 = FrameData.Ids[idx1];
-// 	}
-
-
-// 	var ToolTipFrame = -1;
-// 	for(var i = 0; i < FRAME_COUNT; i++)
-// 	{
-// 		var fMs = FrameData.Time[i];
-// 		var fPrc = (fMs - GreenTime) * LerpDist;
-// 		fPrc = Clamp(fPrc, 0, 1);
-// 		var color = LerpColor(fPrc);
-// 		var fid = FrameData.Ids[i];
-// 		if(fid >= id0 && fid <= id1)
-// 		{
-// 			color = 'cyan';
-// 		}else if(FrameData.Frozen[i])
-// 		{
-// 			color = 'purple';
-// 		}
-
-
-// 		var fH = fHeightScale * fMs;
-// 		var bMouse = LocalMouseX > fX && LocalMouseX < fX + fWidth+1 && MouseY <= HistoryHeight;
-// 		if(bMouse && !MouseDragging)
-// 		{
-// 			context.fillStyle = FRAME_HISTORY_COLOR_GPU;
-// 			ToolTipFrame = i;
-// 		}
-// 		else
-// 		{
-// 			context.fillStyle = color;
-// 		}
-// 		context.fillRect(fX, fHeight - fH, fWidth-1, fH);
-// 		fX += fWidth;
-// 	}
-
-
-// 	DrawRange(context, MouseDragActiveXStart, MouseDragActiveXEnd, 0, HistoryHeight, '#59d0ff', '#00ddff');
-
-
-// 	var fH = fHeight - fHeightScale * Settings.TargetTime;
-// 	context.fillStyle = 'wheat';
-// 	context.strokeStyle = 'wheat';
-// 	context.beginPath();
-// 	context.moveTo(0, fH);
-// 	context.lineTo(nWidth, fH);
-// 	// context.closePath();
-// 	context.stroke();
-// 	var YText;
-// 	if(fH > HistoryHeight * 0.25)
-// 	{
-// 		YText = fH - FontAscent;
-// 	}
-// 	else
-// 	{
-// 		YText = fH + FontHeight;
-// 	}
-
-// 	context.fillText(Settings.TargetTime + 'ms', 3, YText);
-// 	context.textAlign='right';
-// 	context.fillText(FormatTime(ReferenceHistory) + 'ms', nWidth, FontHeight);
-// 	context.textAlign='left';
-
-
-
-// 	if(ToolTipFrame >= 0)
-// 	{
-// 		var fMs = FrameData.Time[ToolTipFrame];
-// 		var Frozen = FrameData.Frozen[ToolTipFrame];
-// 		ToolTipCallback = function()
-// 		{
-// 			var StringArray = [];
-// 			StringArray.push("Frame");
-// 			StringArray.push("" + ToolTipFrame);
-// 			StringArray.push("Time");
-// 			StringArray.push("" + fMs.toFixed(3));
-// 			if(Frozen)
-// 			{
-// 				StringArray.push("Frozen & Unreliable");
-// 				StringArray.push("");
-// 			}
-// 			return StringArray;
-// 		}
-// 	}
-
-
-// 	ProfileLeave();
-
-// }
 function MouseInRect(Rect)
 {
 	return MouseInside(Rect.x, Rect.y, Rect.w, Rect.h);
@@ -6079,7 +5948,7 @@ function DrawGraph2(context, Parameters, data, Mouse, OutMouseIndex)
 				context.globalAlpha = 1.0;
 				context.fillText(Sample + Ext, x+w, Y + FontHeight);
 				context.globalAlpha = 0.4;
-			
+
 				context.beginPath();
 				context.moveTo(x-(Frame?5:0), Y);
 				context.lineTo(x+w, Y);
@@ -6633,7 +6502,7 @@ function DropHandler(ev)
 	{
 		//add to previous set.
 		ReadMp4File(CSVSets[CSVSetNames[CSVSetNames.length-1]], ev.dataTransfer.files[0]);
-		
+
 	}
 	else
 	{
