@@ -6325,6 +6325,7 @@ function ParseCSVFile(Set, Result, Name)
 	let Lines = Result.split(/\r?\n/);
 	let Headers, Data, DataSorted;
 	let TimeColumn = -1;
+	let FrameTimeColumn = -1;
 	let Columns = 0;
 	for(let i = 0; i < Lines.length; ++i)
 	{
@@ -6346,6 +6347,8 @@ function ParseCSVFile(Set, Result, Name)
 				let ColumnName = Headers[j];
 				if(ColumnName.toLowerCase() == "time")
 					TimeColumn = j;
+				if(ColumnName.toLowerCase() == "frametime")
+					FrameTimeColumn = j;
 				File.ColumnToIndex[Headers[j]] = j;
 				File.Columns[ColumnName] = Data[j];
 				File.ColumnsSorted[ColumnName] = DataSorted[j];
@@ -6394,7 +6397,19 @@ function ParseCSVFile(Set, Result, Name)
 			if(!Set.TimeData || Set.TimeData.length < TimeData.length)
 				Set.TimeData = Data[TimeColumn]; // note: only one time used per set
 		}
-
+	}
+	else if(FrameTimeColumn >= 0 && AllowTime)
+	{
+		let FrameTimeData = Data[FrameTimeColumn];
+		let TimeData = new Array(FrameTimeData.length);
+		let time = 0;
+		for(let i = 0; i < FrameTimeData.length; ++i)
+		{
+			TimeData[i] = time;
+			time += FrameTimeData[i] / 1000.0
+		}
+		if(!Set.TimeData || Set.TimeData.length < FrameTimeData.length)
+			Set.TimeData = TimeData; // note: only one time used per set
 	}
 
 	Set.Files[Name] = File;
