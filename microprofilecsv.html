@@ -818,6 +818,8 @@ function ResizeCanvas()
 	MeasureFont();
 	CreateViews(nWidth, nHeight, Settings.ViewCompressed);
 	ActivateView(Settings.ViewActive);
+	gGraphCSVInvalid = 1;
+	RequestDraw();
 }
 
 
@@ -5003,8 +5005,8 @@ function ZoomGraph(nZoom)
 	else
 	{
 		let fNewDetailedRange = gRange / Math.pow((nModDown ? 1.40 : 1.03), -nZoom);
-		if(fNewDetailedRange < 0.0001) //100ns
-			fNewDetailedRange = 0.0001;
+		if(fNewDetailedRange < 2.0/gRangeMaxLen) //100ns
+			fNewDetailedRange = 2.0/gRangeMaxLen;
 		gRange = fNewDetailedRange;
 	}
 
@@ -5512,6 +5514,7 @@ function CreateGraph2Data(Samples, Name, Color, Mode, Samples2)
 	gd.Samples2 = Samples2;
 	for(let i = 0; i < Samples.length; ++i)
 	{
+		if (isNaN(Samples[i])) continue;
 		min = Math.min(min, Samples[i]);
 		max = Math.max(max, Samples[i]);
 	}
@@ -5519,6 +5522,7 @@ function CreateGraph2Data(Samples, Name, Color, Mode, Samples2)
 	{
 		for(let i = 0; i < Samples2.length; ++i)
 		{
+			if (isNaN(Samples2[i])) continue;
 			min = Math.min(min, Samples2[i]);
 			max = Math.max(max, Samples2[i]);
 		}
