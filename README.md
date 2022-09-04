@@ -11,9 +11,10 @@ It spawned as a small hack from [microprofile](https://github.com/jonasmr/microp
 * Drag one or more .csv files onto the web page
 	* If you drag more than one, they will be treated as a set, letting you visualize min/max/avg
 	* A video can be included as well(mp4 or webm)
-		* If there is a column named "time" in the csv file, that will be used to control the video position
-		* Otherwise the video will just be mapped linearly
-
+		* By default video will be mapped linearly: first csv row is the start of the movie, last row is the end
+		* If there is one of two specific columns, these will used to control the position of the movie:
+			* `time`: will be interpreted as the absolute time in **seconds** for each row
+			* `frametime`: will be interpreted as frametime in **milliseconds**. Summed while parsing the file to derive the absolute time for each row.
 * The Source menu can be used to control what is shown in each graph
 * Mode Menu Controls what kind of graphs to show
 * Preset menu can be used to save presets
