@@ -144,6 +144,7 @@ var MouseInCaptureButton = 0;
 
 var ToolTipCallback = null;
 let ToolTipImmediate = null;
+let ToolTipTag = null;
 let ToolTipImmediateColumns = 2;
 
 
@@ -1126,6 +1127,7 @@ function DrawGraphCSV(FullUpdate, View, Canvas, context, LocalMouseX, LocalMouse
 
 			ToolTipImmediateColumns = 4;
 			ToolTipImmediate = InitToolTip();
+            ToolTipTag = null;
 			for(let SetIndex = 0; SetIndex < CSVSetNames.length; ++SetIndex)
 			{
 				if(SetIndex == (CSVActiveSet-1) || CSVActiveSet == 0)
@@ -1141,6 +1143,12 @@ function DrawGraphCSV(FullUpdate, View, Canvas, context, LocalMouseX, LocalMouse
 							ToolTipAdd(ToolTipImmediate, ColumnName,  Set.GraphDataAvg[ColumnName].Color, Set.GraphDataAvg[ColumnName].Samples[MouseIndex], Set.GraphDataMin[ColumnName].Samples[MouseIndex], Set.GraphDataMax[ColumnName].Samples[MouseIndex]);
 						}
 					}
+                    if(Set.Tags[MouseIndex] != null)
+                    {
+                        if(!ToolTipTag)
+                            ToolTipTag = new Array();
+                        ToolTipTag.push(Set.Tags[MouseIndex]);
+                    }
 				}
 			}
 		}
@@ -1156,6 +1164,7 @@ function DrawGraphCSV(FullUpdate, View, Canvas, context, LocalMouseX, LocalMouse
 function StringHash(s) //note: matching code in microprofile.cpp: uint32_t MicroProfileStringHash(const char* pString)
 {
 	var h = 0xfeedba3e;
+    for(var x = 0; x < 3; ++x)
 	for(var i = 0; i < s.length; ++i)
 	{
 		h = s.charCodeAt(i) + ((h << 5) - h);
@@ -1166,8 +1175,10 @@ function StringHash(s) //note: matching code in microprofile.cpp: uint32_t Micro
 
 function StringColorIndex(Name)
 {
-	var h = StringHash(Name);
-	var cidx = Math.floor(360*(h  / (1<<32-1)) );
+	let h = StringHash(Name);
+    let the_float = h  / (1<<32-1);
+    let scaled = Math.abs(360.0 * the_float);
+	let cidx = Math.floor(scaled);
 	return cidx;
 }
 
@@ -4564,6 +4575,11 @@ function DrawActiveToolTip()
 		return;
 	if(SubMenuActive == -1)
 	{
+        if(ToolTipTag)
+        {
+            DrawToolTip(ToolTipTag, CanvasDetailedView, MouseX, nHeight - FontHeight, 1);
+            ToolTipTag = null;
+        }
 		if(ToolTipImmediate)
 		{
 			DrawToolTip(ToolTipImmediate, CanvasDetailedView, MouseX, MouseY, ToolTipImmediateColumns);
@@ -6059,9 +6075,11 @@ function CreateCSVSetFile(Set, Filename)
 	File.Name = Filename;
 	File.DataSorted = [];
 	File.Data = [];
+    File.Tags = [];
 	File.ColumnToIndex = {};
 	File.ColumnsSorted = {};
 	File.Columns = {};
+
 	return File;
 
 }
@@ -6267,6 +6285,13 @@ function ParseCSVCheckFinished(Name)
 		}
 	}
 }
+
+function ParseTagLine(Line)
+{
+    if(Line[0] == '#')
+        return Line.slice(1, Line.length).trim();
+    return null;
+}
 function ParseCSVLine(Line)
 {
 	let Pos = 0;
@@ -6327,12 +6352,19 @@ function ParseCSVFile(Set, Result, Name)
 {
 	let File = CreateCSVSetFile(Set, Name);
 	let Lines = Result.split(/\r?\n/);
-	let Headers, Data, DataSorted;
+	let Headers, Data, DataSorted, Tags;
 	let TimeColumn = -1;
 	let FrameTimeColumn = -1;
 	let Columns = 0;
+    let CurrentTag = null;
 	for(let i = 0; i < Lines.length; ++i)
 	{
+        let Tag = ParseTagLine(Lines[i]);
+        if(Tag){
+            CurrentTag = Tag;
+            continue;
+        }
+
 		let LineData = ParseCSVLine(Lines[i]);
 		if(i == 0)
 		{
@@ -6340,8 +6372,10 @@ function ParseCSVFile(Set, Result, Name)
 			Columns = Headers.length;
 
 			Data = new Array(Columns);
+            Tags = new Array();
 			DataSorted = new Array(Columns);
 			File.Data = Data;
+            File.Tags = Tags;
 			File.DataSorted = DataSorted;
 			for(let j = 0; j < Columns; ++j)
 			{
@@ -6371,6 +6405,7 @@ function ParseCSVFile(Set, Result, Name)
 				Data[j].push(parseFloat(LineData[j]));
 				DataSorted[j].push(parseFloat(LineData[j]));
 			}
+            Tags.push(CurrentTag);
 		}
 	}
 	let cmp = function(a,b){return a-b;}
@@ -6417,6 +6452,8 @@ function ParseCSVFile(Set, Result, Name)
 	}
 
 	Set.Files[Name] = File;
+    if(!Set.Tags)
+        Set.Tags = File.Tags; // can only show tags fromt he first file in a set
 	Set.FinishedCount++;
 	ParseCSVCheckFinished(Set.Name);
 
