@@ -1775,7 +1775,7 @@ function EnableMenu(m)
 		SubMenuTimeout = 0;
 	}
 
-	if(SubMenuActive == SubMenuTimers || SubMenuActive == SubMenuGroup || SubMenuActive == SubMenuModules || SubMenuActive == SubMenuFunctions || SubMenuActive == SubMenuPatched)
+	if(SubMenuActive == SubMenuTimers || SubMenuActive == SubMenuGroup || SubMenuActive == SubMenuModules || SubMenuActive == SubMenuFunctions || SubMenuActive == SubMenuPatched || SubMenuActive == SubMenuGraph)
 	{
 		FilterInputDiv.style['display'] = 'inline';
 		FilterInput.focus();
@@ -2849,15 +2849,14 @@ function DrawMenuGraph()
 	let Selection = null;
 	let SizeInfo = {};
 	let NumColumns = 0;
-	for(let key in CSVAllColumns)
-		NumColumns++;
-	SizeInfo.h = (NumColumns) * BoxHeight;
 	let wLeft = 0;
 	let wRight = 0;//MeasureObjectKeys(20, CSVAllColumns);
 	let context = CanvasDetailedView.getContext('2d');
 	let data = Array();
 	let LeftCount = 0;
 	let LeftSet = {};
+	let FilterArray = CreateFilter(FilterInput.value);
+
 	for(let i in CSVAllColumns)
 	{
 		let index = i.indexOf('_');
@@ -2868,25 +2867,29 @@ function DrawMenuGraph()
 			l = i.substring(0, index);
 			r = i.substring(index+1);
 		}
-		wLeft = Math.max(wLeft, context.measureText(l).width);
-		wRight = Math.max(wRight, context.measureText(r).width);
-		let element = {};
-		element.l = l;
-		element.r = r;
-		element.CName = i;
-		if(!LeftSet[l])
+		if(FilterMatch(FilterArray, l + " " + r))
 		{
-			LeftCount++;
-			LeftSet[l] = 1;
+			wLeft = Math.max(wLeft, context.measureText(l).width);
+			wRight = Math.max(wRight, context.measureText(r).width);
+			let element = {};
+			element.l = l;
+			element.r = r;
+			element.CName = i;
+			if(!LeftSet[l])
+			{
+				LeftCount++;
+				LeftSet[l] = 1;
+			}
+			NumColumns++;
+			data.push(element);
 		}
-		data.push(element);
 	}
+	SizeInfo.h = (NumColumns) * BoxHeight;
+
 	let comp = function(l, r){ return l.l.localeCompare(r.l);};
 	data.sort(comp);
 
 	let Width = wLeft + 25 + wRight;
-
-	SizeInfo.h += (LeftCount-1) * BoxHeight;
 
 
 	SizeInfo.w = Width;
@@ -2894,10 +2897,14 @@ function DrawMenuGraph()
 
 	SizeInfo.x = GraphButtonX;
 	SizeInfo.y = GraphButtonY;
-	if(SizeInfo.y + SizeInfo.h > nHeight)
-		SizeInfo.y = nHeight - SizeInfo.h;
+
+	MoveFilterInputDiv(SizeInfo.x, SizeInfo.y, SizeInfo.w);
+
+
+
 
 	let M = CreateMenuState(SizeInfo);
+	M.y += 35;
 	context.fillRect(M.x, M.y, Width, SizeInfo.h);
 
 	let GraphSet = GraphSettings.Graphs[GraphButtonIndex];
@@ -2907,16 +2914,17 @@ function DrawMenuGraph()
 	let i = 0;
 	if(data.length>0)
 	{
-		let LeftLast = data[0].l;
+		let LeftLast = null;
 		for(let i in data)
 		{
 			let element = data[i];
 			let CName = element.CName;
-			if(LeftLast != element.l)
+			if(LeftLast && LeftLast != element.l)
 			{
 				LeftLast = element.l;
 				DrawMenuElement(M, 0, "---", "", 'white', 0);
 			}
+
 
 			let Active = GraphSet[CName] == 1;
 			if(DrawMenuElement(M, Active, element.l, element.r, 'white'))
