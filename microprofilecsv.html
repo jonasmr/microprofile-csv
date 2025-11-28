@@ -400,6 +400,7 @@ function CreateDefaultGraphSettings()
 	}
 	GraphSettings.NumGraphs = MAX_GRAPHS;
 	GraphSettings.GraphModeMask = DEFAULT_GRAPH_MODE_MASK;
+	GraphSettings.TimeFormat = 0;
 	return GraphSettings;
 }
 
@@ -920,7 +921,7 @@ function DrawGraphCSV(FullUpdate, View, Canvas, context, LocalMouseX, LocalMouse
 			{
 				Index = Math.min(Index, Set.TimeData.length-1);
 				let seconds = Set.TimeData[Index];
-				Str += ": " + FormatSeconds(seconds);
+				Str += ": " + FormatCSVTime(seconds);
 			}
 
 		}
@@ -1097,7 +1098,7 @@ function DrawGraphCSV(FullUpdate, View, Canvas, context, LocalMouseX, LocalMouse
 				{
 					r.push('');
 					for(let i = 0; i < time.length; ++i)
-						r.push(FormatSeconds(time[i]));
+						r.push(FormatCSVTime(time[i]));
 				}
 				return r;
 			};
@@ -1114,7 +1115,7 @@ function DrawGraphCSV(FullUpdate, View, Canvas, context, LocalMouseX, LocalMouse
 				{
 					r.push('');
 					for(let i = 0; i < l; ++i)
-						r.push(FormatSeconds(t1[i]-t0[i]));
+						r.push(FormatCSVTime(t1[i]-t0[i]));
 				}
 				return r;
 			};
@@ -2990,8 +2991,28 @@ function DrawMenuGraphMode()
 		}
 		Mask = Mask << 1;
 	}
-	if(GraphSettings.GraphModeMask != GraphModeMask)
+	DrawMenuElement(M, false, "------", "", 'white');
+	let TimeFormat = GraphSettings.TimeFormat;
+	if(!TimeFormat)
+		TimeFormat = 0;
+	let TimeFormatStr = "s";
+	if(TimeFormat == 1)
+		TimeFormatStr = "ms";
+	else if(TimeFormat == 2)
+		TimeFormatStr = "us";
+	else if(TimeFormat == 3)
+		TimeFormatStr = "ns";
+
+	if(DrawMenuElement(M, false, "TimeFormat", TimeFormatStr, 'white'))
 	{
+		TimeFormat = (TimeFormat+1) % 4;
+	}
+
+
+
+	if(GraphSettings.GraphModeMask != GraphModeMask || GraphSettings.TimeFormat != TimeFormat)
+	{
+		GraphSettings.TimeFormat = TimeFormat;
 		GraphSettings.GraphModeMask = GraphModeMask;
 		WriteCookie();
 	}
@@ -4475,8 +4496,16 @@ function GetTimeFromIndexArray(Index)
 	return out;
 }
 
-function FormatSeconds(seconds)
+function FormatCSVTime(time)
 {
+	let seconds = time;
+	if(GraphSettings.TimeFormat == 1)
+		seconds = time / 1000.0;
+	else if (GraphSettings.TimeFormat == 2)
+		seconds = time / 1000000.0;
+	else if (GraphSettings.TimeFormat == 2)
+		seconds = time / 1000000000.0;
+
 	let str = "";
 	let minutes = Math.floor(seconds/60.0);
 	seconds = seconds - minutes * 60;
